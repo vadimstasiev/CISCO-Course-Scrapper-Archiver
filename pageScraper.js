@@ -33,10 +33,9 @@ const scraperObject = {
         // Password Input
         let passwordInputXPath = '//*[@id="password"]';
         let signinButtonXPath = '//*[@id="kc-login"]';
-        await page.waitForXPath(emailInputXPath);
+        await page.waitForXPath(passwordInputXPath);
         const [passwordInputHandle] = await page.$x(passwordInputXPath);
         const [signinButtonHandle] = await page.$x(signinButtonXPath);
-        console.log(passwordInputHandle)
 
         await page.evaluate(async (inputEl, nextButtonEl, password) => {
             inputEl.value = password;
@@ -44,7 +43,6 @@ const scraperObject = {
             setTimeout(()=>{
                 console.log('waiting');
             }, 2000)
-            console.log(nextButtonEl)
             nextButtonEl.click();
         }, passwordInputHandle, signinButtonHandle, config.creds.password);
 
