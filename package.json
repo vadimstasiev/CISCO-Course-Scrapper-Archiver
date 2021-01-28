@@ -1,0 +1,23 @@
+{
+  "name": "puppeteer-template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vadimstasiev/puppeteer-template.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vadimstasiev/puppeteer-template/issues"
+  },
+  "homepage": "https://github.com/vadimstasiev/puppeteer-template#readme",
+  "dependencies": {
+    "puppeteer": "^5.5.0"
+  }
+}
