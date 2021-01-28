@@ -1,0 +1,57 @@
+let containers2 = document.querySelectorAll('.container').forEach(container => {
+	const isHidden = (el) => {
+		return (el.offsetParent === null)
+	}
+    let elements = Array.from(container.getElementsByTagName("*"));
+    elements = elements.filter(element => {
+       	if (element.tagName!=='image' && element.textContent!== '' && !element.parentElement.className.includes('visually-hidden') && !element.className.includes('visually-hidden') && !element.parentElement.innerHTML.includes('display: none')){
+            let exists = false;
+            for (const el of elements){
+                if (el.textContent.includes(element.textContent) || isHidden(element)) {
+                    exists = true;
+                }
+            }
+			return !exists;
+		}
+	
+    })
+    elements.forEach(el => console.log(el.textContent));
+    return elements; // array of elements go into each container
+})
+
+let containers2 = document.querySelectorAll('.container').forEach(container => {
+    let elements = Array.from(container.getElementsByTagName("*"));
+    elements = elements.filter(element => {
+       	if (element.tagName!=='image' && element.textContent!== '' && !element.parentElement.className.includes('visually-hidden') && !element.className.includes('visually-hidden') && !element.parentElement.innerHTML.includes('display: none')){
+            let exists = false;
+            for (const el of elements){
+                if (el.textContent.includes(element.textContent)) {
+					console.log('el.textContent', el.textContent)
+					console.log('element.textContent', element.textContent)
+                    exists = true;
+                }
+            }
+			return !exists;
+		}
+	
+    })
+    elements.forEach(el => console.log(el.textContent));
+    return elements; // array of elements go into each container
+})
+
+
+let containers2 = document.querySelectorAll('.chunk').forEach(container => {
+    let elements = Array.from(container.getElementsByTagName("*"));
+    elements.forEach(el => console.log(el.textContent));
+    return elements; // array of elements go into each container
+})
+
+
+document.querySelectorAll('.chunk').forEach(container => {
+    const txt = container.innerHTML;
+    console.log(txt);
+})
+
+
+
+

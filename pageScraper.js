@@ -58,7 +58,7 @@ const scrapingActions = [
         }
     },
     {
-        url: config.course_url,
+        url: config.course_button_url,
         async scraper(browser){
             let page = await browser.newPage();
             console.log(`Navigating to ${this.url}...`);
@@ -70,39 +70,70 @@ const scrapingActions = [
 
             await loadModuleButtonHandle.click();
 
-            let pages = await browser.pages();
-            const lastPage = pages.length;  
-
-            
-            // switch to last tab in the browser as the course is loaded in a new tab
-
-            console.log(lastPage)
-            page = await pages[lastPage-1];
-            // console.log(page);
-            console.log(pages)
-
             // await page.waitForNavigation({ waitUntil: 'networkidle0' })
+
+            console.log(`Navigating to ${config.course_url}...`);
+            // Navigate to the course url that has the button to load the course
+            await page.goto(config.course_url, {waitUntil: 'networkidle2'});
+
+            page.bringToFront();
 
             const courseLogoXPath = '//*[@id="root"]/header/div/a/span';
             // await page.waitForXPath(courseLogoXPath);    
             console.log("Course Loaded!");
 
-            setTimeout(()=>{
-                console.log('waiting');
-            }, 10000)
-
-            console.log(browser.pages())
-
             // Scrape the course
             const data = await page.evaluate(() => {
-                console.log("what the fuck")
-                const content = Array.from(document.querySelectorAll('h1 h2 p'))
-                return tds.map(td => {
-                   var txt = td.innerHTML;
-                   return txt.replace(/<a [^>]+>[^<]*<\/a>/g, '').trim();
-                });
+                // better try to iterate individually, find image/video sources, download them, change source code to point to them
+                let allContent;
+                document.querySelectorAll('.chunk').forEach(container => {
+                    allContent += container.innerHTML;
+                })
             });
             console.log(data)
+
+
+
+
+
+
+
+
+            // let pages = await browser.pages();
+            // const lastPage = pages.length;  
+
+            
+            // switch to last tab in the browser as the course is loaded in a new tab
+
+
+
+            // console.log(lastPage)
+            // page = await pages[lastPage-1];
+            // // console.log(page);
+            // console.log(pages)
+
+            // await page.waitForNavigation({ waitUntil: 'networkidle0' })
+
+            // const courseLogoXPath = '//*[@id="root"]/header/div/a/span';
+            // // await page.waitForXPath(courseLogoXPath);    
+            // console.log("Course Loaded!");
+
+            // setTimeout(()=>{
+            //     console.log('waiting');
+            // }, 10000)
+
+            // console.log(browser.pages())
+
+            // // Scrape the course
+            // const data = await page.evaluate(() => {
+            //     console.log("what the fuck")
+            //     const content = Array.from(document.querySelectorAll('h1 h2 p'))
+            //     return tds.map(td => {
+            //        var txt = td.innerHTML;
+            //        return txt.replace(/<a [^>]+>[^<]*<\/a>/g, '').trim();
+            //     });
+            // });
+            // console.log(data)
         }
     }
 ]
