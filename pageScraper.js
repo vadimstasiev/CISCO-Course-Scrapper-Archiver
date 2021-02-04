@@ -26,6 +26,9 @@ const scrapingActions = [
                 }, 1000)
             }, emailInputHandle, nextButtonHandle, config.creds.email);
 
+            // Just to be safe
+            sleep(1);
+
             await Promise.all([
                 nextButtonHandle.click(),
                 page.waitForNavigation({ waitUntil: 'networkidle0' }),
@@ -47,6 +50,9 @@ const scrapingActions = [
                 }, 1000)
             }, passwordInputHandle, signinButtonHandle, config.creds.password);
             
+            // Just to be safe
+            sleep(1);
+
             await Promise.all([
                 signinButtonHandle.click(),
                 page.waitForNavigation({ waitUntil: 'networkidle0' }),
@@ -62,6 +68,21 @@ const scrapingActions = [
     {
         url: config.course_button_url,
         async scraper(browser){
+            // Create storage dir if not exist
+            var dir = './output';
+            var dir_img = `${dir}/IMG`
+            var dir_svg = `${dir}/SVG`
+
+            if (!fs.existsSync(dir)){
+                fs.mkdirSync(dir);
+            }
+            if (!fs.existsSync(dir_img)){
+                fs.mkdirSync(dir_img);
+            }
+            if (!fs.existsSync(dir_svg)){
+                fs.mkdirSync(dir_svg);
+            }
+
             let page = await browser.newPage();
             console.log(`Navigating to ${this.url}...`);
             // Navigate to the course url that has the button to load the course
@@ -72,7 +93,6 @@ const scrapingActions = [
 
             await loadModuleButtonHandle.click();
 
-            // await page.waitForNavigation({ waitUntil: 'networkidle0' })
 
             console.log(`Navigating to ${config.course_url}...`);
             // Navigate to the course url that has the button to load the course
@@ -82,41 +102,20 @@ const scrapingActions = [
 
             page.bringToFront();
 
-            // const courseLogoXPath = '//*[@id="root"]/header/div/a/span';
-            // await page.waitForXPath(courseLogoXPath);    
-            // console.log("Course Loaded!");
-
-            // // Scrape the course
-            // const data = await page.evaluate(() => {
-            //     // better try to iterate individually, find image/video sources, download them, change source code to point to them
-            //     let allContent;
-            //     document.querySelectorAll('.chunk').forEach(container => {
-            //         allContent += container.innerHTML;
-            //     })
-            // });
-            // console.log(data)
-
-            // keep track of pages, use this name for the files
             let pageCount = 0;
             const contentChunksXPath = '//*[@id="chunks-container"]';
 
             while(true) {
-                // const loadingDotsXPath = '//*[@class="faux-header"]';
-                // await page.waitForXPath(loadingDotsXPath);
-                
-                
-                // const courseLogoXPath = '//*[@id="root"]/header/div/a/span';
-                // await page.waitForXPath(courseLogoXPath);
-                
-                
                 while(true){
                     try{
                         if(await page.waitForXPath(contentChunksXPath)){break;}
                     } catch {}
                 }
-
-                // await page.waitForXPath(contentChunksXPath);
                 const [contentChunksHandle] = await page.$x(contentChunksXPath);
+
+
+
+
 
                 // Get array of image urls from inside parent "chunks-container" 
                 const imagesHref = await contentChunksHandle.evaluate(() => {
@@ -129,7 +128,7 @@ const scrapingActions = [
                     const image_name = `${uuidv4()}.${get_url_extension(image)}`
                     image_names.push(image_name);
                     // you can await download if you get JavaScript heap out of memory
-                    download(image, `./output/IMG/${image_name}`);
+                    download(image, `${dir_img}/${image_name}`);
                     
                 }
                 // Replace the source on images of the html to point to the downloaded ones
@@ -141,20 +140,44 @@ const scrapingActions = [
                     });
                 }, image_names);
                 
-                // save SVGs
-    
+                // Get array of SVG elements from inside parent "chunks-container" 
+                const svgPack = await contentChunksHandle.evaluate(() => {
+                    // Exposing function
+                    const uuidv4 = () => {
+                        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                          var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                          return v.toString(16);
+                        });
+                    }
+                    // Getting all SVGs
+                    let elements = Array.from(document.querySelectorAll('svg'));
+                    return elements.map(element => {
+                        element.setAttribute("xmlns","http://www.w3.org/2000/svg")
+                        const data = element.outerHTML;
+                        const name = uuidv4() + ".svg"
+                        return {name, data};
+                    });
+                }, );
+
+                // Generate SVG Files
+                svgPack.map(svg => {
+                    fs.writeFile(`${dir_svg}/${svg.name}`, svg.data, (err) => {
+                        if (err) return console.log(err);
+                        console.log(`${svg.name} saved!`);
+                    });
+                })
+
+                await contentChunksHandle.evaluate((_, image_names) => {
+                    let elements = Array.from(document.querySelectorAll('svg'));
+                    elements.map((element, i) => {
+                        element.src = `IMG/${image_names[i]}`
+                    });
+                }, image_names);
+
                 // Save Videos
     
     
                 // Get all inner html of content-chunks
-    
-                // const pageOutput = await contentChunksHandle.evaluate(() => {
-                //     // document.forEach(container => {
-                //     //     const txt = container.innerHTML;
-                //     //     console.log(txt);
-                //     // })
-                //     return document.querySelector("*").innerHTML;
-                // });
     
                 const pageOutput = await page.evaluate(() => {
                     let allContent;
@@ -165,7 +188,7 @@ const scrapingActions = [
                 });
     
                 // console.log(pageOutput);
-                fs.writeFile(`./output/${pageCount}.md`, pageOutput, (err) => {
+                fs.writeFile(`${dir}/${pageCount}.md`, pageOutput, (err) => {
                     if (err) return console.log(err);
                     console.log(`File ${pageCount}.md saved!`);
                 });
@@ -184,44 +207,6 @@ const scrapingActions = [
 
                 pageCount++;
             }
-
-            
-
-            // let pages = await browser.pages();
-            // const lastPage = pages.length;  
-
-            
-            // switch to last tab in the browser as the course is loaded in a new tab
-
-
-
-            // console.log(lastPage)
-            // page = await pages[lastPage-1];
-            // // console.log(page);
-            // console.log(pages)
-
-            // await page.waitForNavigation({ waitUntil: 'networkidle0' })
-
-            // const courseLogoXPath = '//*[@id="root"]/header/div/a/span';
-            // // await page.waitForXPath(courseLogoXPath);    
-            // console.log("Course Loaded!");
-
-            // setTimeout(()=>{
-            //     console.log('waiting');
-            // }, 10000)
-
-            // console.log(browser.pages())
-
-            // // Scrape the course
-            // const data = await page.evaluate(() => {
-            //     console.log("what the fuck")
-            //     const content = Array.from(document.querySelectorAll('h1 h2 p'))
-            //     return tds.map(td => {
-            //        var txt = td.innerHTML;
-            //        return txt.replace(/<a [^>]+>[^<]*<\/a>/g, '').trim();
-            //     });
-            // });
-            // console.log(data)
         }
     }
 ]
