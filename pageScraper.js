@@ -174,7 +174,16 @@ const scrapingActions = [
                         element.src = `IMG/${image_names[i]}`
                     });
                 }, image_names);
-    
+
+                // Remove all <style> tags
+
+                await contentChunksHandle.evaluate(() => {
+                    let elements = Array.from(document.getElementsByTagName('style'));
+                    elements.map((element) => {
+                        element.remove()
+                    });
+                });
+
                 // Add basic markdown navigation
                 const navigation = `[Previous](./${String(pageCount-1).padStart(3, '0')}.md) [Next](./${String(pageCount+1).padStart(3, '0')}.md)`;
                 let pageOutput = navigation;
@@ -182,6 +191,7 @@ const scrapingActions = [
                 pageOutput += await page.evaluate(() => {
                     let allContent = '';
                     document.querySelectorAll('.chunk').forEach(container => {
+
                         allContent += container.innerHTML;
                     })
                     return allContent;
