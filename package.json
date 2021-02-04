@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/vadimstasiev/puppeteer-template#readme",
   "dependencies": {
-    "puppeteer": "^5.5.0"
+    "puppeteer": "^5.5.0",
+    "request": "^2.88.2"
   }
 }
