@@ -187,10 +187,10 @@ const scrapingActions = [
                     return allContent;
                 });
     
-                // console.log(pageOutput);
-                fs.writeFile(`${dir}/${pageCount}.md`, pageOutput, (err) => {
+                // console.log(pageOutput);String(pageCount).padStart(3, '0')
+                fs.writeFile(`${dir}/${String(pageCount).padStart(3, '0')}.md`, pageOutput, (err) => {
                     if (err) return console.log(err);
-                    console.log(`File ${pageCount}.md saved!`);
+                    console.log(`File ${String(pageCount).padStart(3, '0')}.md saved!`);
                 });
 
                 // find next button then click if not break icon-right-arrow
