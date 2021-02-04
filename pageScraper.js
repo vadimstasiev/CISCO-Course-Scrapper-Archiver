@@ -1,6 +1,6 @@
 fs = require('fs');
 const { config } = require('./netacad-config');
-const { download, uuidv4 } = require('./helpers');
+const { download, uuidv4, get_url_extension } = require('./helpers');
 
 const scrapingActions = [
     {
@@ -106,17 +106,19 @@ const scrapingActions = [
             const image_names = [];
             // Download every image
             for(const image of imagesHref) {
-                const image_name = `${uuidv4()}.${image.split('.').pop()}`
+                const image_name = `${uuidv4()}.${get_url_extension(image)}`
                 image_names.push(image_name);
                 result = await download(image, `./output/IMG/${image_name}`);
             }
             // Replace the source on images of the html to point to the downloaded ones
-            await contentChunksHandle.evaluate(() => {
+            // Note: aparently the first parameter is something else, possibly contentChunksHandle
+            await contentChunksHandle.evaluate((_, image_names) => {
+                console.log(image_names)
                 let elements = Array.from(document.querySelectorAll('img'));
                 elements.map((element, i) => {
-                    element.src = `.IMG/${element.src}`
+                    element.src = `IMG/${image_names[i]}`
                 });
-            });
+            }, image_names);
             
             // Save SVGs
 
