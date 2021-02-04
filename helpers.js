@@ -2,6 +2,7 @@ const fs = require('fs');
 const https = require('https');
 
 const download = (url, destination) => new Promise((resolve, reject) => {
+    console.log(`Saving: ${destination}`);
     const file = fs.createWriteStream(destination);
   
     https.get(url, response => {
@@ -11,9 +12,10 @@ const download = (url, destination) => new Promise((resolve, reject) => {
         file.close(resolve(true));
       });
     }).on('error', error => {
+      console.log(`Error saving: ${destination}`);
       fs.unlink(destination);
-  
       reject(error.message);
+      
     });
 });
 
@@ -25,7 +27,16 @@ const uuidv4 = () => {
 }
 
 const get_url_extension = ( url ) => {
+    if (url.includes(".webp")){
+        return ".webp";
+    }
     return url.split(/[#?]/)[0].split('.').pop().trim();
 }
 
-module.exports = { download, uuidv4, get_url_extension };
+const sleep = (sec) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, sec*1000);
+  });
+} 
+
+module.exports = { download, uuidv4, get_url_extension, sleep };

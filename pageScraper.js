@@ -1,6 +1,6 @@
 fs = require('fs');
 const { config } = require('./netacad-config');
-const { download, uuidv4, get_url_extension } = require('./helpers');
+const { download, uuidv4, get_url_extension, sleep } = require('./helpers');
 
 const scrapingActions = [
     {
@@ -78,11 +78,13 @@ const scrapingActions = [
             // Navigate to the course url that has the button to load the course
             await page.goto(config.course_url, {waitUntil: 'networkidle2'});
 
+            sleep(3);
+
             page.bringToFront();
 
-            const courseLogoXPath = '//*[@id="root"]/header/div/a/span';
-            await page.waitForXPath(courseLogoXPath);    
-            console.log("Course Loaded!");
+            // const courseLogoXPath = '//*[@id="root"]/header/div/a/span';
+            // await page.waitForXPath(courseLogoXPath);    
+            // console.log("Course Loaded!");
 
             // // Scrape the course
             // const data = await page.evaluate(() => {
@@ -94,57 +96,95 @@ const scrapingActions = [
             // });
             // console.log(data)
 
+            // keep track of pages, use this name for the files
+            let pageCount = 0;
             const contentChunksXPath = '//*[@id="chunks-container"]';
-            await page.waitForXPath(contentChunksXPath);
-            const [contentChunksHandle] = await page.$x(contentChunksXPath);
 
-            // Get images inside parent "chunks-container" 
-            const imagesHref = await contentChunksHandle.evaluate(() => {
-                let elements = Array.from(document.querySelectorAll('img'));
-                return elements.map(element => element.src);
-            });
-            const image_names = [];
-            // Download every image
-            for(const image of imagesHref) {
-                const image_name = `${uuidv4()}.${get_url_extension(image)}`
-                image_names.push(image_name);
-                result = await download(image, `./output/IMG/${image_name}`);
-            }
-            // Replace the source on images of the html to point to the downloaded ones
-            // Note: aparently the first parameter is something else, possibly contentChunksHandle
-            await contentChunksHandle.evaluate((_, image_names) => {
-                console.log(image_names)
-                let elements = Array.from(document.querySelectorAll('img'));
-                elements.map((element, i) => {
-                    element.src = `IMG/${image_names[i]}`
+            while(true) {
+                // const loadingDotsXPath = '//*[@class="faux-header"]';
+                // await page.waitForXPath(loadingDotsXPath);
+                
+                
+                // const courseLogoXPath = '//*[@id="root"]/header/div/a/span';
+                // await page.waitForXPath(courseLogoXPath);
+                
+                
+                while(true){
+                    try{
+                        if(await page.waitForXPath(contentChunksXPath)){break;}
+                    } catch {}
+                }
+
+                // await page.waitForXPath(contentChunksXPath);
+                const [contentChunksHandle] = await page.$x(contentChunksXPath);
+
+                // Get array of image urls from inside parent "chunks-container" 
+                const imagesHref = await contentChunksHandle.evaluate(() => {
+                    let elements = Array.from(document.querySelectorAll('img'));
+                    return elements.map(element => element.src);
                 });
-            }, image_names);
-            
-            // Save SVGs
+                const image_names = [];
+                // Download every image, imagesHref = array with urls
+                for(const image of imagesHref) {
+                    const image_name = `${uuidv4()}.${get_url_extension(image)}`
+                    image_names.push(image_name);
+                    // you can await download if you get JavaScript heap out of memory
+                    download(image, `./output/IMG/${image_name}`);
+                    
+                }
+                // Replace the source on images of the html to point to the downloaded ones
+                // Note: aparently the first parameter is something else, possibly contentChunksHandle
+                await contentChunksHandle.evaluate((_, image_names) => {
+                    let elements = Array.from(document.querySelectorAll('img'));
+                    elements.map((element, i) => {
+                        element.src = `IMG/${image_names[i]}`
+                    });
+                }, image_names);
+                
+                // save SVGs
+    
+                // Save Videos
+    
+    
+                // Get all inner html of content-chunks
+    
+                // const pageOutput = await contentChunksHandle.evaluate(() => {
+                //     // document.forEach(container => {
+                //     //     const txt = container.innerHTML;
+                //     //     console.log(txt);
+                //     // })
+                //     return document.querySelector("*").innerHTML;
+                // });
+    
+                const pageOutput = await page.evaluate(() => {
+                    let allContent;
+                    document.querySelectorAll('.chunk').forEach(container => {
+                        allContent += container.innerHTML;
+                    })
+                    return allContent;
+                });
+    
+                // console.log(pageOutput);
+                fs.writeFile(`./output/${pageCount}.md`, pageOutput, (err) => {
+                    if (err) return console.log(err);
+                    console.log(`File ${pageCount}.md saved!`);
+                });
 
-            // Get all inner html of content-chunks
+                // find next button then click if not break icon-right-arrow
+                const nextButtonXPath = '//*[@class="icon-right-arrow"]';
+                let nextButtonHandle;
+                while(true){
+                    await page.waitForXPath(nextButtonXPath);
+                    [nextButtonHandle] = await page.$x(nextButtonXPath);
+                    if(nextButtonHandle){break;}
+                }
+                await nextButtonHandle.click();
+                // await page.waitForNavigation({ waitUntil: 'networkidle0' })
+                await sleep(1)
 
-            // const pageOutput = await contentChunksHandle.evaluate(() => {
-            //     // document.forEach(container => {
-            //     //     const txt = container.innerHTML;
-            //     //     console.log(txt);
-            //     // })
-            //     return document.querySelector("*").innerHTML;
-            // });
+                pageCount++;
+            }
 
-            const pageOutput = await page.evaluate(() => {
-                let allContent;
-                document.querySelectorAll('.chunk').forEach(container => {
-                    allContent += container.innerHTML;
-                })
-                return allContent;
-            });
-
-            // console.log(pageOutput)
-            fs.writeFile('./output/output.md', pageOutput, (err) => {
-                if (err) return console.log(err);
-                console.log('File saved!');
-            });
             
 
             // let pages = await browser.pages();
