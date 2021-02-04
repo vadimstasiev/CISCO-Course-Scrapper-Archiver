@@ -155,6 +155,7 @@ const scrapingActions = [
                         element.setAttribute("xmlns","http://www.w3.org/2000/svg")
                         const data = element.outerHTML;
                         const name = uuidv4() + ".svg"
+                        element.outerHTML = `<img src="SVG/${name}" />`;
                         return {name, data};
                     });
                 }, );
@@ -173,19 +174,19 @@ const scrapingActions = [
                         element.src = `IMG/${image_names[i]}`
                     });
                 }, image_names);
-
-                // Save Videos
     
-    
+                // Add basic markdown navigation
+                const navigation = `[Previous](./${String(pageCount-1).padStart(3, '0')}.md) [Next](./${String(pageCount+1).padStart(3, '0')}.md)`;
+                let pageOutput = navigation;
                 // Get all inner html of content-chunks
-    
-                const pageOutput = await page.evaluate(() => {
-                    let allContent;
+                pageOutput += await page.evaluate(() => {
+                    let allContent = '';
                     document.querySelectorAll('.chunk').forEach(container => {
                         allContent += container.innerHTML;
                     })
                     return allContent;
                 });
+                pageOutput+=navigation;
     
                 // console.log(pageOutput);String(pageCount).padStart(3, '0')
                 fs.writeFile(`${dir}/${String(pageCount).padStart(3, '0')}.md`, pageOutput, (err) => {
