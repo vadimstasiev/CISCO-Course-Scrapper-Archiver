@@ -12,3 +12,17 @@ Configure `netacad-config.js` with your email and password, the `course_button_u
 The course_url should be the page that opens when you click the example above, in my case:
 
 ![course page](./IMG/1.png)
+
+# Run 
+
+First, install the dependencies with:
+
+```
+npm i
+```
+
+Run the code with:
+
+```
+npm start
+```
