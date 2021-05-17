@@ -12,8 +12,8 @@ const scrapingActions = [
             await page.goto(this.url, {waitUntil: 'networkidle2'});
 
             // Email input
-            const emailInputXPath = '//*[@id="email"]';
-            const nextButtonXPath = '//*[@id="btn"]';
+            const emailInputXPath = '//*[@id="idp-discovery-username"]';
+            const nextButtonXPath = '//*[@id="idp-discovery-submit"]';
             await page.waitForXPath(emailInputXPath);
             const [emailInputHandle] = await page.$x(emailInputXPath);
             const [nextButtonHandle] = await page.$x(nextButtonXPath);
@@ -25,7 +25,10 @@ const scrapingActions = [
                     console.log('waiting');
                 }, 1000)
             }, emailInputHandle, nextButtonHandle, config.creds.email);
-
+            await emailInputHandle.click()
+            await page.keyboard.type(' ')
+            sleep(1);
+            await page.keyboard.press('Backspace')
             // Just to be safe
             sleep(1);
 
@@ -36,8 +39,8 @@ const scrapingActions = [
 
 
             // Password Input
-            const passwordInputXPath = '//*[@id="password"]';
-            const signinButtonXPath = '//*[@id="kc-login"]';
+            const passwordInputXPath = '//*[@id="okta-signin-password"]';
+            const signinButtonXPath = '//*[@id="okta-signin-submit"]';
             await page.waitForXPath(passwordInputXPath);
             const [passwordInputHandle] = await page.$x(passwordInputXPath);
             const [signinButtonHandle] = await page.$x(signinButtonXPath);
@@ -49,6 +52,10 @@ const scrapingActions = [
                     console.log('waiting');
                 }, 1000)
             }, passwordInputHandle, signinButtonHandle, config.creds.password);
+            await passwordInputHandle.click()
+            await page.keyboard.type(' ')
+            sleep(1);
+            await page.keyboard.press('Backspace')
             
             // Just to be safe
             sleep(1);
